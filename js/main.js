@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isFetching = false;
     let toastTimeout;
     let connectionAttempts = 0;
-    const MAX_ATTEMPTS = 3;
+    const MAX_ATTEMPTS = 5;
+    let connectionTimeout;
     let audioContext;
     let analyser;
     let audioSource;
@@ -45,29 +46,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // Free Lofi Stations URLs (prioritized by connection speed)
     const lofiStations = [
         'https://ice6.somafm.com/groovesalad-128-mp3', // SomaFM Groove Salad - ambient/downtempo
-        'https://ice4.somafm.com/fluid-128-mp3', // SomaFM Fluid - instrumental hiphop
-        'https://ice4.somafm.com/vaporwaves-128-mp3', // SomaFM Vaporwaves
+        'https://ice4.somafm.com/groovesalad-128-mp3', // SomaFM Groove Salad (backup)
+        'https://ice2.somafm.com/fluid-128-mp3',       // SomaFM Fluid - instrumental hiphop
+        'https://ice6.somafm.com/fluid-128-mp3',       // SomaFM Fluid (backup)
+        'https://ice1.somafm.com/vaporwaves-128-mp3',  // SomaFM Vaporwaves
+        'https://ice4.somafm.com/vaporwaves-128-mp3',  // SomaFM Vaporwaves (backup)
         'https://ice1.somafm.com/deepspaceone-128-mp3', // SomaFM Deep Space One
-        'https://ice1.somafm.com/dronezone-128-mp3', // SomaFM Drone Zone
+        'https://ice4.somafm.com/deepspaceone-128-mp3', // SomaFM Deep Space One (backup)
+        'https://ice2.somafm.com/dronezone-128-mp3',   // SomaFM Drone Zone
+        'https://ice6.somafm.com/dronezone-128-mp3',   // SomaFM Drone Zone (backup)
         'https://ice1.somafm.com/spacestation-128-mp3', // SomaFM Space Station
-        'https://ice1.somafm.com/beatblender-128-mp3', // SomaFM Beat Blender
-        'https://ice1.somafm.com/gsclassic-128-mp3', // SomaFM Groove Salad Classic
-        'https://ice1.somafm.com/lush-128-mp3', // SomaFM Lush
-        'https://ice1.somafm.com/defcon-128-mp3' // SomaFM DEF CON
+        'https://ice4.somafm.com/spacestation-128-mp3', // SomaFM Space Station (backup)
+        'https://ice2.somafm.com/beatblender-128-mp3', // SomaFM Beat Blender
+        'https://ice6.somafm.com/beatblender-128-mp3', // SomaFM Beat Blender (backup)
+        'https://ice2.somafm.com/gsclassic-128-mp3',   // SomaFM Groove Salad Classic
+        'https://ice6.somafm.com/gsclassic-128-mp3',   // SomaFM Groove Salad Classic (backup)
+        'https://ice1.somafm.com/lush-128-mp3',        // SomaFM Lush
+        'https://ice4.somafm.com/lush-128-mp3',        // SomaFM Lush (backup)
+        'https://ice2.somafm.com/defcon-128-mp3',      // SomaFM DEF CON
+        'https://ice6.somafm.com/defcon-128-mp3'       // SomaFM DEF CON (backup)
     ];
     
     // Station names for display
     const stationNames = [
         'SomaFM Groove Salad',
+        'SomaFM Groove Salad (Alt)',
         'SomaFM Fluid',
+        'SomaFM Fluid (Alt)',
         'SomaFM Vaporwaves',
+        'SomaFM Vaporwaves (Alt)',
         'SomaFM Deep Space One',
+        'SomaFM Deep Space One (Alt)',
         'SomaFM Drone Zone',
+        'SomaFM Drone Zone (Alt)',
         'SomaFM Space Station',
+        'SomaFM Space Station (Alt)',
         'SomaFM Beat Blender',
+        'SomaFM Beat Blender (Alt)',
         'SomaFM Groove Salad Classic',
+        'SomaFM Groove Salad Classic (Alt)',
         'SomaFM Lush',
-        'SomaFM DEF CON'
+        'SomaFM Lush (Alt)',
+        'SomaFM DEF CON',
+        'SomaFM DEF CON (Alt)'
     ];
     
     // Create navigation buttons
@@ -77,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navContainer.className = 'navigation-buttons';
         navContainer.style.position = 'absolute';
         navContainer.style.top = '29%'; // Position above the radio
-        navContainer.style.left = '61%';
+        navContainer.style.left = '56%';
         navContainer.style.transform = 'translateX(-50%)';
         navContainer.style.display = 'flex';
         navContainer.style.alignItems = 'center';
@@ -216,6 +237,78 @@ document.addEventListener('DOMContentLoaded', () => {
     lofiRadio.preload = "auto";
     lofiRadio.crossOrigin = "anonymous"; // Add CORS support
     
+    // Add error handling
+    lofiRadio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        if (isPlaying && connectionAttempts < MAX_ATTEMPTS) {
+            // Try alternating between primary and backup servers
+            if (currentStationIndex % 2 === 0 && currentStationIndex + 1 < lofiStations.length) {
+                // Try the backup server for the same station
+                currentStationIndex++;
+            } else {
+                // Move to next station's primary server
+                currentStationIndex = (currentStationIndex + 1) % lofiStations.length;
+                if (currentStationIndex % 2 === 1) {
+                    currentStationIndex++;
+                }
+            }
+            
+            // Make sure we don't go out of bounds
+            currentStationIndex = currentStationIndex % lofiStations.length;
+            
+            showToast(`Connection error. Trying ${stationNames[currentStationIndex]}...`);
+            lofiRadio.src = lofiStations[currentStationIndex];
+            lofiRadio.load();
+            setTimeout(tryPlayRadio, 300);
+        }
+    });
+    
+    // Add stalled event handler
+    lofiRadio.addEventListener('stalled', () => {
+        if (isPlaying) {
+            showToast("Stream stalled. Reconnecting...");
+            // Wait a bit and then try to resume
+            setTimeout(() => {
+                if (isPlaying) {
+                    lofiRadio.load();
+                    lofiRadio.play().catch(e => {
+                        console.error("Error resuming after stall:", e);
+                        tryPlayRadio();
+                    });
+                }
+            }, 2000);
+        }
+    });
+    
+    // When radio starts playing, start the video
+    lofiRadio.addEventListener('playing', () => {
+        if (isPlaying || isFetching) {
+            // Audio is playing, now play the video
+            playVideo();
+            updatePlaybackUI('playing');
+            
+            // Hide toast when radio starts playing
+            hideToast();
+            console.log("Radio started playing!");
+        }
+    });
+    
+    // Add load start event to detect when the station is being fetched
+    lofiRadio.addEventListener('loadstart', () => {
+        if (isPlaying || isFetching) {
+            // Stop video while loading audio
+            stopVideo();
+            updatePlaybackUI('fetching');
+            
+            showToast("Fetching from station...");
+            
+            // Set a shorter timeout to improve perceived performance
+            toastTimeout = setTimeout(() => {
+                hideToast();
+            }, 1000); // 1 second timeout
+        }
+    });
+    
     // Create navigation buttons after DOM is fully loaded
     createNavigationButtons();
     
@@ -333,39 +426,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Test each station and find the best one
+    // Fast connection test to adjust station order
     function fastConnectionTest() {
-        return Promise.race(lofiStations.map((station, index) => {
-            return new Promise((resolve) => {
-                const audio = new Audio();
-                audio.addEventListener('canplaythrough', () => {
-                    resolve(index);
-                });
+        // Create a map of test results for each station
+        const stationLatencies = new Map();
+        const stationPromises = [];
+        
+        // Test primary stations only (even indices)
+        for (let i = 0; i < lofiStations.length; i += 2) {
+            const stationUrl = lofiStations[i];
+            
+            // Create a promise for each station test
+            const promise = new Promise((resolve) => {
+                const startTime = performance.now();
+                const testAudio = new Audio();
                 
-                audio.addEventListener('error', () => {
-                    resolve(null);
-                });
+                // Set a timeout for the test
+                const timeout = setTimeout(() => {
+                    // If it takes too long, mark as unreachable
+                    stationLatencies.set(i, Infinity);
+                    resolve();
+                }, 5000);
                 
-                // Set timeout to avoid waiting too long
-                setTimeout(() => {
-                    resolve(null);
-                }, 500);
+                testAudio.addEventListener('canplaythrough', () => {
+                    clearTimeout(timeout);
+                    const endTime = performance.now();
+                    const latency = endTime - startTime;
+                    stationLatencies.set(i, latency);
+                    testAudio.src = '';
+                    resolve();
+                }, { once: true });
                 
-                audio.src = station;
-                audio.load();
+                testAudio.addEventListener('error', () => {
+                    clearTimeout(timeout);
+                    stationLatencies.set(i, Infinity);
+                    resolve();
+                }, { once: true });
+                
+                // Start loading the audio
+                testAudio.src = stationUrl;
+                testAudio.load();
             });
-        }));
-    }
-    
-    // Try to find the fastest station immediately
-    fastConnectionTest().then(bestIndex => {
-        if (bestIndex !== null) {
-            currentStationIndex = bestIndex;
-            lofiRadio.src = lofiStations[currentStationIndex];
-            lofiRadio.load();
-            console.log("Found fastest station:", lofiStations[currentStationIndex]);
+            
+            stationPromises.push(promise);
         }
-    });
+        
+        // Wait for all tests to complete
+        Promise.all(stationPromises).then(() => {
+            // Sort stations by latency
+            const stationOrder = Array.from(stationLatencies.entries())
+                .sort((a, b) => a[1] - b[1])
+                .map(entry => entry[0]);
+            
+            // Only reorder if we found at least one working station
+            if (stationOrder.length > 0 && stationOrder[0] !== 0 && stationLatencies.get(stationOrder[0]) !== Infinity) {
+                // Start with the fastest station
+                currentStationIndex = stationOrder[0];
+                lofiRadio.src = lofiStations[currentStationIndex];
+                lofiRadio.load();
+                console.log("Fast connection test complete. Starting with station:", stationNames[currentStationIndex]);
+            }
+        });
+    }
+
+    // Run the fast connection test when the page loads
+    setTimeout(fastConnectionTest, 1000);
     
     // Handle video loading
     function loadVideo() {
@@ -481,11 +606,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     // Try next station if we have attempts left
-                    if (connectionAttempts < MAX_ATTEMPTS && currentStationIndex < lofiStations.length - 1) {
-                        currentStationIndex++;
+                    if (connectionAttempts < MAX_ATTEMPTS) {
+                        // Try alternating between primary and backup servers for the same station
+                        if (connectionAttempts % 2 === 0 && currentStationIndex + 1 < lofiStations.length) {
+                            // Try the backup server for the same station
+                            currentStationIndex++;
+                        } else if (currentStationIndex % 2 === 1) {
+                            // If we're on a backup server, move to the next station's primary server
+                            currentStationIndex++;
+                        } else {
+                            // If we're on an odd index (primary server), skip to the next station's primary server
+                            currentStationIndex += 2;
+                        }
+                        
+                        // Make sure we don't go out of bounds
+                        currentStationIndex = currentStationIndex % lofiStations.length;
+                        
                         lofiRadio.src = lofiStations[currentStationIndex];
                         lofiRadio.load();
-                        showToast("Trying another station...");
+                        showToast(`Trying ${stationNames[currentStationIndex]}...`);
                         
                         // Try again with a small delay
                         setTimeout(tryPlayRadio, 300);
@@ -508,16 +647,30 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set up canplaythrough listener
         lofiRadio.addEventListener('canplaythrough', canPlayHandler, { once: true });
         
-        // Set up timeout in case canplaythrough doesn't fire within 3 seconds
+        // Set up timeout in case canplaythrough doesn't fire within 8 seconds (increased from 5)
         const timeoutId = setTimeout(() => {
             lofiRadio.removeEventListener('canplaythrough', canPlayHandler);
             
             // Try next station if we have attempts left
-            if (connectionAttempts < MAX_ATTEMPTS && currentStationIndex < lofiStations.length - 1) {
-                currentStationIndex++;
+            if (connectionAttempts < MAX_ATTEMPTS) {
+                // Try alternating between primary and backup servers for the same station
+                if (connectionAttempts % 2 === 0 && currentStationIndex + 1 < lofiStations.length) {
+                    // Try the backup server for the same station
+                    currentStationIndex++;
+                } else if (currentStationIndex % 2 === 1) {
+                    // If we're on a backup server, move to the next station's primary server
+                    currentStationIndex++;
+                } else {
+                    // If we're on an odd index (primary server), skip to the next station's primary server
+                    currentStationIndex += 2;
+                }
+                
+                // Make sure we don't go out of bounds
+                currentStationIndex = currentStationIndex % lofiStations.length;
+                
                 lofiRadio.src = lofiStations[currentStationIndex];
                 lofiRadio.load();
-                showToast("Station timed out. Trying another...");
+                showToast(`Station timed out. Trying ${stationNames[currentStationIndex]}...`);
                 
                 // Try again with a small delay
                 setTimeout(tryPlayRadio, 300);
@@ -528,63 +681,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Reset connection attempts to allow trying again
                 connectionAttempts = 0;
             }
-        }, 5000); // 5 second timeout
+        }, 8000); // 8 second timeout (increased from 5)
         
         // Clear timeout if canplaythrough fires
         lofiRadio.addEventListener('canplaythrough', () => {
             clearTimeout(timeoutId);
         }, { once: true });
     }
-    
-    // Handle loading errors for audio stream
-    lofiRadio.addEventListener('error', (e) => {
-        console.error("Audio error:", e);
-        if ((isPlaying || isFetching) && currentStationIndex < lofiStations.length - 1) {
-            showToast("Connection failed. Trying another station...");
-            updatePlaybackUI('fetching');
-            
-            // Try next station
-            currentStationIndex++;
-            lofiRadio.src = lofiStations[currentStationIndex];
-            lofiRadio.load();
-            tryPlayRadio();
-        } else if ((isPlaying || isFetching) && currentStationIndex >= lofiStations.length - 1) {
-            // We've tried all stations, cycle back to first
-            currentStationIndex = 0;
-            lofiRadio.src = lofiStations[currentStationIndex];
-            lofiRadio.load();
-            tryPlayRadio();
-        }
-    });
-    
-    // When radio starts playing, start the video
-    lofiRadio.addEventListener('playing', () => {
-        if (isPlaying || isFetching) {
-            // Audio is playing, now play the video
-            playVideo();
-            updatePlaybackUI('playing');
-            
-            // Hide toast when radio starts playing
-            hideToast();
-            console.log("Radio started playing!");
-        }
-    });
-    
-    // Add load start event to detect when the station is being fetched
-    lofiRadio.addEventListener('loadstart', () => {
-        if (isPlaying || isFetching) {
-            // Stop video while loading audio
-            stopVideo();
-            updatePlaybackUI('fetching');
-            
-            showToast("Fetching from station...");
-            
-            // Set a shorter timeout to improve perceived performance
-            toastTimeout = setTimeout(() => {
-                hideToast();
-            }, 1000); // 1 second timeout
-        }
-    });
     
     // Handle ended event - restart if we're still in playing state
     lofiRadio.addEventListener('ended', () => {
@@ -593,24 +696,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Stream ended. Reconnecting...");
             
             // Reset audio element and try again
-            lofiRadio.src = lofiStations[currentStationIndex];
-            lofiRadio.load();
-            tryPlayRadio();
-        }
-    });
-    
-    // Handle stalled event - when audio download stalls
-    lofiRadio.addEventListener('stalled', () => {
-        if (isPlaying) {
-            showToast("Connection stalled. Reconnecting...");
-            
-            // Try next station
-            if (currentStationIndex < lofiStations.length - 1) {
-                currentStationIndex++;
-            } else {
-                currentStationIndex = 0; // Cycle back to first station
-            }
-            
             lofiRadio.src = lofiStations[currentStationIndex];
             lofiRadio.load();
             tryPlayRadio();
