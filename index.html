@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lofi Radio</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="radio-container">
+            <div class="shadow">
+                <img src="assets/shadow.png" alt="Radio Shadow">
+            </div>
+            <div class="radio">
+                <div class="character-video">
+                    <video id="danceVideo" loop playsinline>
+                        <source src="assets/dance.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="playback-controls">
+                    <img src="assets/play.png" alt="Play" class="play-button">
+                    <img src="assets/pause.png" alt="Pause" class="pause-button">
+                </div>
+                <!-- Hidden audio element for lofi radio -->
+                <audio id="lofiRadio" preload="auto">
+                    <!-- Using ChilledCow's lofi hip hop radio -->
+                    <source src="https://streams.ilovemusic.de/iloveradio17.mp3" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+                <!-- Toast message -->
+                <div id="toast" class="toast">Fetching from station...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom sticky strip -->
+    <div class="bottom-strip">
+        <img src="assets/bottom.png" alt="Bottom Strip">
+    </div>
+    
+    <script src="js/main.js"></script>
+</body>
+</html> 
