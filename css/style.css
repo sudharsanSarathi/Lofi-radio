@@ -218,3 +218,29 @@ body {
     width: 299px;
     display: block; object-fit: contain;
 }
+
+/* Add blinking text styles */
+.blinking-text {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: bold;
+    color: #FFFFFF;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+    animation: blink 1.5s ease-in-out infinite;
+    z-index: 20;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 1;
+    }
+}

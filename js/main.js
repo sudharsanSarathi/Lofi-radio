@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('toast');
     const radioElement = document.querySelector('.radio');
     const bottomStrip = document.querySelector('.bottom-strip');
+    const blinkingText = document.querySelector('.blinking-text');
     
     // Add click event listener to the bottom strip
     bottomStrip.addEventListener('click', () => {
@@ -710,6 +711,11 @@ document.addEventListener('DOMContentLoaded', () => {
             stopVideo();
             updatePlaybackUI('paused');
             hideToast();
+            
+            // Show blinking text again when paused
+            if (blinkingText) {
+                blinkingText.style.display = 'block';
+            }
         } else {
             // Initialize audio context if needed
             try {
@@ -721,6 +727,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (e) {
                 console.error("Could not initialize audio context:", e);
+            }
+            
+            // Hide blinking text when play is clicked
+            if (blinkingText) {
+                blinkingText.style.display = 'none';
             }
             
             // Currently paused, so play
