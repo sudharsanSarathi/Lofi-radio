@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Set volume to 25%
-    lofiRadio.volume = 0.25; // Set volume to exactly 25%
+    lofiRadio.volume = 0.25;
 
     let isPlaying = false;
     let isFetching = false;
@@ -27,197 +27,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let animationId;
     let audioStreamActive = false;
     
-    // Add CSS to ensure playback controls are 44px x 44px
-    const style = document.createElement('style');
-    style.textContent = `
-        .playback-controls {
-            width: 44px !important;
-            height: 44px !important;
-        }
-        .play-button,
-        .pause-button {
-            width: 44px !important;
-            height: 44px !important;
-        }
-    `;
-    document.head.appendChild(style);
-    
     // Free Lofi Stations URLs (prioritized by connection speed)
     const lofiStations = [
-        'https://ice6.somafm.com/groovesalad-128-mp3', // SomaFM Groove Salad - ambient/downtempo
-        'https://ice4.somafm.com/fluid-128-mp3', // SomaFM Fluid - instrumental hiphop
-        'https://ice4.somafm.com/vaporwaves-128-mp3', // SomaFM Vaporwaves
-        'https://ice1.somafm.com/deepspaceone-128-mp3', // SomaFM Deep Space One
-        'https://ice1.somafm.com/dronezone-128-mp3', // SomaFM Drone Zone
-        'https://ice1.somafm.com/spacestation-128-mp3', // SomaFM Space Station
-        'https://ice1.somafm.com/beatblender-128-mp3', // SomaFM Beat Blender
-        'https://ice1.somafm.com/gsclassic-128-mp3', // SomaFM Groove Salad Classic
-        'https://ice1.somafm.com/lush-128-mp3', // SomaFM Lush
-        'https://ice1.somafm.com/defcon-128-mp3' // SomaFM DEF CON
+        'https://streams.ilovemusic.de/iloveradio17.mp3', // Fast connection
+        'https://play.streamafrica.net/lofiradio',
+        'https://streamer.radio.co/s5c5da6a36/listen'
     ];
-    
-    // Station names for display
-    const stationNames = [
-        'SomaFM Groove Salad',
-        'SomaFM Fluid',
-        'SomaFM Vaporwaves',
-        'SomaFM Deep Space One',
-        'SomaFM Drone Zone',
-        'SomaFM Space Station',
-        'SomaFM Beat Blender',
-        'SomaFM Groove Salad Classic',
-        'SomaFM Lush',
-        'SomaFM DEF CON'
-    ];
-    
-    // Create navigation buttons
-    const createNavigationButtons = () => {
-        // Container for the buttons
-        const navContainer = document.createElement('div');
-        navContainer.className = 'navigation-buttons';
-        navContainer.style.position = 'absolute';
-        navContainer.style.top = '29%'; // Position above the radio
-        navContainer.style.left = '61%';
-        navContainer.style.transform = 'translateX(-50%)';
-        navContainer.style.display = 'flex';
-        navContainer.style.alignItems = 'center';
-        navContainer.style.width = '80px'; // Smaller width without the station display
-        navContainer.style.zIndex = '20';
-        
-        // Back button
-        const backButton = document.createElement('img');
-        backButton.src = 'assets/back_button.png';
-        backButton.className = 'nav-button back-button';
-        backButton.style.height = '12px';
-        backButton.style.width = 'auto';
-        backButton.style.cursor = 'pointer';
-        backButton.style.transition = 'transform 0.1s ease-in-out';
-        
-        // Next button
-        const nextButton = document.createElement('img');
-        nextButton.src = 'assets/next_button.png';
-        nextButton.className = 'nav-button next-button';
-        nextButton.style.height = '12px';
-        nextButton.style.width = 'auto';
-        nextButton.style.paddingLeft = '4px';
-        nextButton.style.cursor = 'pointer';
-        nextButton.style.transition = 'transform 0.1s ease-in-out';
-        
-        // Add mouse events for desktop
-        backButton.addEventListener('mousedown', () => {
-            backButton.style.transform = 'translateY(2px)';
-        });
-        
-        backButton.addEventListener('mouseup', () => {
-            backButton.style.transform = 'translateY(0)';
-            
-            // Change to previous station
-            currentStationIndex = (currentStationIndex - 1 + lofiStations.length) % lofiStations.length;
-            changeStation();
-        });
-        
-        nextButton.addEventListener('mousedown', () => {
-            nextButton.style.transform = 'translateY(2px)';
-        });
-        
-        nextButton.addEventListener('mouseup', () => {
-            nextButton.style.transform = 'translateY(0)';
-            
-            // Change to next station
-            currentStationIndex = (currentStationIndex + 1) % lofiStations.length;
-            changeStation();
-        });
-        
-        // Add touch events for mobile devices
-        backButton.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            backButton.style.transform = 'translateY(2px)';
-        });
-        
-        backButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            backButton.style.transform = 'translateY(0)';
-            
-            // Change to previous station
-            currentStationIndex = (currentStationIndex - 1 + lofiStations.length) % lofiStations.length;
-            changeStation();
-        });
-        
-        nextButton.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            nextButton.style.transform = 'translateY(2px)';
-        });
-        
-        nextButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            nextButton.style.transform = 'translateY(0)';
-            
-            // Change to next station
-            currentStationIndex = (currentStationIndex + 1) % lofiStations.length;
-            changeStation();
-        });
-        
-        // Add mouseout event to reset transform if mouse leaves button while pressed
-        backButton.addEventListener('mouseout', () => {
-            backButton.style.transform = 'translateY(0)';
-        });
-        
-        nextButton.addEventListener('mouseout', () => {
-            nextButton.style.transform = 'translateY(0)';
-        });
-        
-        // Add touchcancel event to handle interrupted touch events
-        backButton.addEventListener('touchcancel', () => {
-            backButton.style.transform = 'translateY(0)';
-        });
-        
-        nextButton.addEventListener('touchcancel', () => {
-            nextButton.style.transform = 'translateY(0)';
-        });
-        
-        // Add buttons to container
-        navContainer.appendChild(backButton);
-        navContainer.appendChild(nextButton);
-        
-        // Add container to radio element to move with animation
-        const radioElement = document.querySelector('.radio');
-        radioElement.appendChild(navContainer);
-    };
-    
-    // Function to change station
-    const changeStation = () => {
-        const wasPlaying = isPlaying;
-        
-        // Pause current playback
-        if (isPlaying) {
-            lofiRadio.pause();
-            stopVideo();
-            updatePlaybackUI('paused');
-        }
-        
-        // Update station source
-        lofiRadio.src = lofiStations[currentStationIndex];
-        lofiRadio.load();
-        
-        showToast(`Changed to station ${currentStationIndex + 1}`);
-        
-        // Resume playback if it was playing
-        if (wasPlaying) {
-            showToast("Connecting to radio...");
-            updatePlaybackUI('fetching');
-            connectionAttempts = 0;
-            tryPlayRadio();
-        }
-    };
     
     // Immediately set the src to the first station
     let currentStationIndex = 0;
     lofiRadio.src = lofiStations[currentStationIndex];
     lofiRadio.preload = "auto";
     lofiRadio.crossOrigin = "anonymous"; // Add CORS support
-    
-    // Create navigation buttons after DOM is fully loaded
-    createNavigationButtons();
     
     // Force load the audio immediately
     lofiRadio.load();
@@ -455,85 +276,42 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Add event listener for canplaythrough before attempting to play
-        const canPlayHandler = () => {
-            console.log("Audio can play through, attempting playback");
-            lofiRadio.removeEventListener('canplaythrough', canPlayHandler);
-            
-            // Try to play current station
-            const playPromise = lofiRadio.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    // Success! Reset attempts counter
-                    connectionAttempts = 0;
-                    console.log("Radio playing successfully!");
-                    updatePlaybackUI('playing');
-                    hideToast();
-                }).catch(e => {
-                    console.error('Audio playback error:', e);
-                    
-                    // Check if it's an autoplay policy error
-                    if (e.name === 'NotAllowedError') {
-                        showToast("Autoplay blocked. Click to play.");
-                        updatePlaybackUI('paused');
-                        return;
-                    }
-                    
-                    // Try next station if we have attempts left
-                    if (connectionAttempts < MAX_ATTEMPTS && currentStationIndex < lofiStations.length - 1) {
-                        currentStationIndex++;
-                        lofiRadio.src = lofiStations[currentStationIndex];
-                        lofiRadio.load();
-                        showToast("Trying another station...");
-                        
-                        // Try again with a small delay
-                        setTimeout(tryPlayRadio, 300);
-                    } else {
-                        updatePlaybackUI('paused');
-                        showToast("Connection failed. Try again.");
-                        
-                        // Reset connection attempts to allow trying again
-                        connectionAttempts = 0;
-                        
-                        // Auto-hide after 2 seconds
-                        toastTimeout = setTimeout(() => {
-                            hideToast();
-                        }, 2000);
-                    }
-                });
-            }
-        };
+        // Try to play current station
+        const playPromise = lofiRadio.play();
         
-        // Set up canplaythrough listener
-        lofiRadio.addEventListener('canplaythrough', canPlayHandler, { once: true });
-        
-        // Set up timeout in case canplaythrough doesn't fire within 3 seconds
-        const timeoutId = setTimeout(() => {
-            lofiRadio.removeEventListener('canplaythrough', canPlayHandler);
-            
-            // Try next station if we have attempts left
-            if (connectionAttempts < MAX_ATTEMPTS && currentStationIndex < lofiStations.length - 1) {
-                currentStationIndex++;
-                lofiRadio.src = lofiStations[currentStationIndex];
-                lofiRadio.load();
-                showToast("Station timed out. Trying another...");
-                
-                // Try again with a small delay
-                setTimeout(tryPlayRadio, 300);
-            } else {
-                updatePlaybackUI('paused');
-                showToast("Connection failed. Try again.");
-                
-                // Reset connection attempts to allow trying again
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // Success! Reset attempts counter
                 connectionAttempts = 0;
-            }
-        }, 5000); // 5 second timeout
-        
-        // Clear timeout if canplaythrough fires
-        lofiRadio.addEventListener('canplaythrough', () => {
-            clearTimeout(timeoutId);
-        }, { once: true });
+                console.log("Radio playing successfully!");
+                updatePlaybackUI('playing');
+                hideToast();
+            }).catch(e => {
+                console.error('Audio playback error:', e);
+                
+                // Try next station if we have attempts left
+                if (connectionAttempts < MAX_ATTEMPTS && currentStationIndex < lofiStations.length - 1) {
+                    currentStationIndex++;
+                    lofiRadio.src = lofiStations[currentStationIndex];
+                    lofiRadio.load();
+                    showToast("Trying another station...");
+                    
+                    // Try again with a small delay
+                    setTimeout(tryPlayRadio, 300);
+                } else {
+                    updatePlaybackUI('paused');
+                    showToast("Connection failed. Try again.");
+                    
+                    // Reset connection attempts to allow trying again
+                    connectionAttempts = 0;
+                    
+                    // Auto-hide after 2 seconds
+                    toastTimeout = setTimeout(() => {
+                        hideToast();
+                    }, 2000);
+                }
+            });
+        }
     }
     
     // Handle loading errors for audio stream
@@ -626,18 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePlaybackUI('paused');
             hideToast();
         } else {
-            // Initialize audio context if needed
-            try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-            } catch (e) {
-                console.error("Could not initialize audio context:", e);
-            }
-            
             // Currently paused, so play
             showToast("Connecting to radio...");
             updatePlaybackUI('fetching');

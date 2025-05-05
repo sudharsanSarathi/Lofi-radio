@@ -15,18 +15,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #FB9212;
     background-image: url('../assets/background.png');
-    background-size: 100% auto; /* Stretch to 100% width */
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-}
-
-/* Add media query to stop stretching beyond 500px width */
-@media (min-width: 500px) {
-    body {
-        background-size: 500px auto; /* Limit to 500px width on larger screens */
-    }
 }
 
 .container {
@@ -79,7 +71,7 @@ body {
     top: -30px; /* Position shadow above the radio */
     left: 50%;
     transform: translateX(-50%);
-   
+    z-index: 15; /* Higher z-index to appear on top of radio */
     transition: transform 0.3s ease-in-out;
 }
 
@@ -87,7 +79,7 @@ body {
     width: 380px; /* Slightly wider than the radio */
     max-width: 100%;
     margin-top: 276%;
-    height: 40px; max-height: 100%;
+    height: auto;
     filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
 }
 
@@ -114,16 +106,16 @@ body {
     right: 16%;
     top: 38%;
     transform: translate(0, -50%);
-    cursor: pointer; 
-    overflow: hidden;
-    width: 44px;
-    height: 44px;
+    cursor: pointer;
+    width: 38px;
+    height: 38px;
 }
 
 .play-button,
 .pause-button {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
+   
     object-fit: contain;
     position: absolute;
     top: 0;
@@ -132,7 +124,7 @@ body {
 }
 
 .play-button {
-    display: block; object-fit: contain;
+    display: block;
 }
 
 .pause-button {
@@ -144,7 +136,7 @@ body {
 }
 
 .playback-controls.playing .pause-button {
-    display: block; object-fit: contain;
+    display: block;
 }
 
 .playback-controls.fetching .play-button {
@@ -152,7 +144,7 @@ body {
 }
 
 .playback-controls.fetching .pause-button {
-    display: block; object-fit: contain;
+    display: block;
     opacity: 0.7;
 }
 
@@ -196,25 +188,3 @@ body {
     .radio-container {
         transform: scale(0.8);
     }
-}
-
-/* Bottom sticky strip */
-.bottom-strip {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #191919;
-    z-index: 100;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 40px; max-height: 40px; padding: 0;
-    cursor: pointer; overflow: hidden;
-}
-
-.bottom-strip img {
-    height: 40px; max-height: 100%;
-    width: 299px;
-    display: block; object-fit: contain;
-}
