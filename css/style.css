@@ -15,7 +15,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #FB9212;
+    background-color: #faae00;
     background-image: url('../assets/background.png');
     background-size: 100% auto; /* Stretch to 100% width */
     background-position: center;
@@ -227,8 +227,8 @@ body {
     transform: translateX(-50%);
     font-size: 18px;
     font-weight: bold;
-    color: #FFFFFF;
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+    font-family: 'Pixelify Sans', cursive;
+    color: #000000;
     animation: blink 1.5s ease-in-out infinite;
     z-index: 20;
 }
