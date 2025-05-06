@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nextButton.style.cursor = 'pointer';
         nextButton.style.transition = 'transform 0.1s ease-in-out';
         
-        // Add mouse events for desktop
+        // Add simplified mouse events for desktop
         backButton.addEventListener('mousedown', () => {
             backButton.style.transform = 'translateY(2px)';
         });
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             changeStation();
         });
         
-        // Add touch events for mobile devices
+        // Add simplified touch events for mobile devices
         backButton.addEventListener('touchstart', (e) => {
             e.preventDefault();
             backButton.style.transform = 'translateY(2px)';
@@ -206,17 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
         radioElement.appendChild(navContainer);
     };
     
-    // Function to change station
+    // Simplified function to change station - now directly plays without showing loading states
     const changeStation = () => {
-        // Store previous state (not used now since we always start playing)
-        const wasPlaying = isPlaying;
-        
-        // Pause current playback
-        if (isPlaying) {
-            lofiRadio.pause();
-            stopVideo();
-            updatePlaybackUI('paused');
-        }
+        // Stop any current playback
+        lofiRadio.pause();
         
         // Update station source
         lofiRadio.src = lofiStations[currentStationIndex];
@@ -226,12 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (blinkingText) {
             blinkingText.style.display = 'none';
         }
-        
-        // Always play when changing station, even if it wasn't playing before
-        showToast(`Changed to station ${currentStationIndex + 1}`);
-        showToast("Connecting to radio...");
-        updatePlaybackUI('fetching');
-        connectionAttempts = 0;
         
         // Initialize audio context if needed
         try {
@@ -245,9 +232,21 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Could not initialize audio context:", e);
         }
         
-        // Start playing regardless of previous state
+        // Set UI state to playing
+        updatePlaybackUI('playing');
         isPlaying = true;
-        tryPlayRadio();
+        
+        // Directly play audio without loading indicators
+        lofiRadio.play().catch(e => {
+            console.error('Audio playback error:', e);
+            // If it fails, try again with tryPlayRadio
+            if (e.name === 'NotAllowedError') {
+                showToast("Autoplay blocked. Click to play.");
+                updatePlaybackUI('paused');
+            } else {
+                tryPlayRadio();
+            }
+        });
     };
     
     // Immediately set the src to the first station
@@ -448,6 +447,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setupAudioAnalysis();
             }
             analyzeAudio();
+            
+            // Ensure video is playing along with audio
+            playVideo();
         } else if (state === 'fetching') {
             playbackControls.classList.add('fetching');
             isPlaying = false;
@@ -458,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isPlaying = false;
             isFetching = false;
             stopAudioAnalysis();
+            stopVideo();
         }
     }
     
@@ -527,22 +530,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run the fast connection test when the page loads
     setTimeout(fastConnectionTest, 1000);
     
-    // Handle video loading - updated for faster loading
+    // Simplified video loading with no delay
     function loadVideo() {
-        // Load the video immediately with low priority
-        if (!danceVideo.querySelector('source').src.includes('dance.mp4')) {
-            danceVideo.querySelector('source').src = 'assets/dance.mp4';
-            danceVideo.load();
-        }
+        // Directly set the source and load the video
+        danceVideo.querySelector('source').src = 'assets/dance.mp4';
+        danceVideo.load();
         
-        // Mark as playsinline and set all loading attributes
+        // Set video attributes
         danceVideo.playsinline = true;
         danceVideo.muted = true;
         danceVideo.setAttribute('preload', 'auto');
-        
-        danceVideo.addEventListener('canplay', () => {
-            console.log('Video ready to play');
-        });
     }
     
     function playVideo() {
