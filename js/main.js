@@ -135,6 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Change to previous station
             currentStationIndex = (currentStationIndex - 1 + lofiStations.length) % lofiStations.length;
+            
+            // Add loading class
+            backButton.classList.add('loading');
+            nextButton.classList.add('loading');
+            
             changeStation();
         });
         
@@ -147,6 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Change to next station
             currentStationIndex = (currentStationIndex + 1) % lofiStations.length;
+            
+            // Add loading class
+            backButton.classList.add('loading');
+            nextButton.classList.add('loading');
+            
             changeStation();
         });
         
@@ -162,6 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Change to previous station
             currentStationIndex = (currentStationIndex - 1 + lofiStations.length) % lofiStations.length;
+            
+            // Add loading class
+            backButton.classList.add('loading');
+            nextButton.classList.add('loading');
+            
             changeStation();
         });
         
@@ -176,6 +191,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Change to next station
             currentStationIndex = (currentStationIndex + 1) % lofiStations.length;
+            
+            // Add loading class
+            backButton.classList.add('loading');
+            nextButton.classList.add('loading');
+            
             changeStation();
         });
         
@@ -208,28 +228,32 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to change station
     const changeStation = () => {
-        const wasPlaying = isPlaying;
+        // Hide blinking text when navigation buttons are used
+        if (blinkingText) {
+            blinkingText.style.display = 'none';
+        }
+        
+        // Save current station for loading state UI
+        const previousStationIndex = currentStationIndex;
         
         // Pause current playback
         if (isPlaying) {
             lofiRadio.pause();
             stopVideo();
-            updatePlaybackUI('paused');
         }
+        
+        // Always update to fetching UI state
+        updatePlaybackUI('fetching');
         
         // Update station source
         lofiRadio.src = lofiStations[currentStationIndex];
         lofiRadio.load();
         
-        showToast(`Changed to station ${currentStationIndex + 1}`);
+        showToast(`Connecting to station ${currentStationIndex + 1}`);
         
-        // Resume playback if it was playing
-        if (wasPlaying) {
-            showToast("Connecting to radio...");
-            updatePlaybackUI('fetching');
-            connectionAttempts = 0;
-            tryPlayRadio();
-        }
+        // Always try to play, regardless of previous state
+        connectionAttempts = 0;
+        tryPlayRadio();
     };
     
     // Immediately set the src to the first station
@@ -420,10 +444,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePlaybackUI(state) {
         playbackControls.classList.remove('playing', 'fetching');
         
+        // Get the navigation buttons
+        const backButton = document.querySelector('.back-button');
+        const nextButton = document.querySelector('.next-button');
+        
         if (state === 'playing') {
             playbackControls.classList.add('playing');
             isPlaying = true;
             isFetching = false;
+            
+            // Remove loading states from navigation buttons
+            if (backButton) backButton.classList.remove('loading');
+            if (nextButton) nextButton.classList.remove('loading');
             
             // Start audio analysis for visualization if not already active
             if (!audioStreamActive) {
@@ -434,11 +466,21 @@ document.addEventListener('DOMContentLoaded', () => {
             playbackControls.classList.add('fetching');
             isPlaying = false;
             isFetching = true;
+            
+            // Keep loading states on navigation buttons
+            if (backButton) backButton.classList.add('loading');
+            if (nextButton) nextButton.classList.add('loading');
+            
             stopAudioAnalysis();
         } else {
             // Paused state
             isPlaying = false;
             isFetching = false;
+            
+            // Remove loading states from navigation buttons
+            if (backButton) backButton.classList.remove('loading');
+            if (nextButton) nextButton.classList.remove('loading');
+            
             stopAudioAnalysis();
         }
     }
