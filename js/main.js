@@ -29,20 +29,31 @@ document.addEventListener('DOMContentLoaded', () => {
     let animationId;
     let audioStreamActive = false;
     
-    // Add CSS to ensure playback controls are 44px x 44px
-    const style = document.createElement('style');
-    style.textContent = `
-        .playback-controls {
-            width: 44px !important;
-            height: 44px !important;
-        }
-        .play-button,
-        .pause-button {
-            width: 44px !important;
-            height: 44px !important;
-        }
-    `;
-    document.head.appendChild(style);
+    // Fix the playback controls position
+    if (playbackControls) {
+        playbackControls.style.position = 'absolute';
+        playbackControls.style.right = '15%';
+        playbackControls.style.top = '37%';
+        playbackControls.style.transform = 'none';
+        playbackControls.style.width = '45px';
+        playbackControls.style.height = '45px';
+        playbackControls.style.zIndex = '30';
+    }
+    
+    // Ensure play and pause buttons are styled correctly
+    if (playButton) {
+        playButton.style.width = '100%';
+        playButton.style.height = '100%';
+        playButton.style.objectFit = 'contain';
+        playButton.style.transition = 'none';
+    }
+    
+    if (pauseButton) {
+        pauseButton.style.width = '100%';
+        pauseButton.style.height = '100%';
+        pauseButton.style.objectFit = 'contain';
+        pauseButton.style.transition = 'none';
+    }
     
     // Free Lofi Stations URLs (prioritized by connection speed)
     const lofiStations = [
