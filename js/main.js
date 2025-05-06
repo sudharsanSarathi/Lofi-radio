@@ -357,7 +357,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Analyze audio and adjust radio movement
+    // Add image preloading right at the start
+    function preloadImages() {
+        const imageUrls = [
+            'assets/radio_background.png',
+            'assets/play.png',
+            'assets/pause.png',
+            'assets/shadow.png',
+            'assets/back_button.png',
+            'assets/next_button.png',
+            'assets/bottom.png',
+            'assets/background.png'
+        ];
+        
+        imageUrls.forEach(url => {
+            const img = new Image();
+            img.src = url;
+        });
+    }
+    
+    // Call preload immediately
+    preloadImages();
+    
+    // Analyze audio and adjust radio movement - removed animation
     function analyzeAudio() {
         if (!isPlaying || !audioContext || !analyser) return;
         
@@ -374,15 +396,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const midSum = dataArray.slice(5, 15).reduce((acc, val) => acc + val, 0);
             const midAvg = midSum / 10;
             
-            // Calculate intensity based on bass and mid-range (gives a gentler response)
-            const intensity = (bassAvg * 0.6 + midAvg * 0.4) / 255;
-            
-            // Apply gentle movement based on audio intensity
-            if (intensity > 0.05) {
-                radioElement.classList.add('playing');
-            } else {
-                radioElement.classList.remove('playing');
-            }
+            // Remove the animation effects - radio stays static
+            // No class changes here anymore
         } catch (error) {
             console.error("Error analyzing audio:", error);
         }
@@ -397,6 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelAnimationFrame(animationId);
             animationId = null;
         }
+        // Remove animation class to keep radio static
         radioElement.classList.remove('playing');
     }
     
@@ -493,12 +509,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run the fast connection test when the page loads
     setTimeout(fastConnectionTest, 1000);
     
-    // Handle video loading
+    // Handle video loading - updated for faster loading
     function loadVideo() {
+        // Load the video immediately with low priority
         if (!danceVideo.querySelector('source').src.includes('dance.mp4')) {
             danceVideo.querySelector('source').src = 'assets/dance.mp4';
             danceVideo.load();
         }
+        
+        // Mark as playsinline and set all loading attributes
+        danceVideo.playsinline = true;
+        danceVideo.muted = true;
+        danceVideo.setAttribute('preload', 'auto');
         
         danceVideo.addEventListener('canplay', () => {
             console.log('Video ready to play');

@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lofi Radio</title>
+    
+    <!-- DNS prefetch -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
+    <!-- Preload key assets -->
+    <link rel="preload" href="assets/radio_background.png" as="image">
+    <link rel="preload" href="assets/background.png" as="image">
+    <link rel="preload" href="assets/play.png" as="image">
+    <link rel="preload" href="assets/pause.png" as="image">
+    
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap" rel="stylesheet">
 </head>
@@ -42,6 +53,6 @@
         <img src="assets/bottom.png" alt="Bottom Strip">
     </div>
     
-    <script src="js/main.js"></script>
+    <script src="js/main.js" defer></script>
 </body>
 </html> 

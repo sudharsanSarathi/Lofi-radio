@@ -67,11 +67,6 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     z-index: 10;
-    transition: transform 0.3s ease-in-out;
-}
-
-.radio.playing {
-    animation: gentle-float 3s ease-in-out infinite;
 }
 
 .shadow {
@@ -231,6 +226,8 @@ body {
     color: #000000;
     animation: blink 1.5s ease-in-out infinite;
     z-index: 20;
+    white-space: nowrap; /* Prevent line breaks */
+    text-align: center;
 }
 
 @keyframes blink {
@@ -243,4 +240,14 @@ body {
     100% {
         opacity: 1;
     }
+}
+
+/* Add preloading styles to improve image loading speed */
+body::after {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    z-index: -1;
+    content: url('../assets/radio_background.png') url('../assets/play.png') url('../assets/pause.png') url('../assets/shadow.png') url('../assets/back_button.png') url('../assets/next_button.png') url('../assets/bottom.png') url('../assets/background.png');
 }
