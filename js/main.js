@@ -208,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to change station
     const changeStation = () => {
+        // Store previous state (not used now since we always start playing)
         const wasPlaying = isPlaying;
         
         // Pause current playback
