@@ -446,12 +446,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Update UI based on playback state
     function updatePlaybackUI(state) {
+        // Only change classes, don't modify position or appearance
         playbackControls.classList.remove('playing', 'fetching');
+        
+        // Make sure the playback controls don't move
+        playbackControls.style.transform = 'none';
         
         if (state === 'playing') {
             playbackControls.classList.add('playing');
             isPlaying = true;
             isFetching = false;
+            
+            // Ensure buttons don't move
+            if (pauseButton) {
+                pauseButton.style.transform = 'none';
+                pauseButton.style.opacity = '1';
+            }
             
             // Start audio analysis for visualization if not already active
             if (!audioStreamActive) {
@@ -465,11 +475,24 @@ document.addEventListener('DOMContentLoaded', () => {
             playbackControls.classList.add('fetching');
             isPlaying = false;
             isFetching = true;
+            
+            // Ensure buttons don't move during fetching
+            if (pauseButton) {
+                pauseButton.style.transform = 'none';
+                pauseButton.style.opacity = '1';
+            }
+            
             stopAudioAnalysis();
         } else {
             // Paused state
             isPlaying = false;
             isFetching = false;
+            
+            // Ensure buttons don't move
+            if (playButton) {
+                playButton.style.transform = 'none';
+            }
+            
             stopAudioAnalysis();
             stopVideo();
         }
